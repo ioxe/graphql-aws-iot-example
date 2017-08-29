@@ -1,0 +1,44 @@
+{
+  "name": "todo-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "config": {
+    "devFunctionName": "s-todos-TodoApi-1WT8MVY2Y22PJ",
+    "devCodeBucketName": "iox-playground",
+    "codeKey": "todo-api.zip",
+    "profile": "iox"
+  },
+  "scripts": {
+    "prebuild": "rimraf dist && mkdir -p dist",
+    "build": "babel src --out-dir dist -s && cp package.json dist/package.json && cd dist && npm install --production",
+    "prezip": "rimraf build && mkdir -p build",
+    "zip": "cd dist && zip -r ../build/build.zip *",
+    "lint": "eslint src",
+    "lint:dist": "eslint dist index.js",
+    "preupdate": "npm run build && npm run zip",
+    "update": "aws lambda update-function-code --function-name $npm_package_config_devFunctionName --zip-file fileb://$PWD/build/build.zip --profile $npm_package_config_profile --region us-west-2",
+    "updateS3": "npm run preupdate && aws s3 cp build/build.zip s3://$npm_package_config_devCodeBucketName/$npm_package_config_codeKey --profile $npm_package_config_profile --region us-west-2",
+    "schema:generate": "babel src --out-dir dist -s && node output-schema.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "graphql": "0.11.1",
+    "graphql-aws-iot-ws-transport": "file:../../../qraphl-aws-iot-ws-transport",
+    "source-map-support": "^0.4.14"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.102.0",
+    "graphql-server-core": "^1.1.0",
+    "graphql-tools": "^0.10.1",
+    "babel-cli": "^6.24.0",
+    "babel-eslint": "^6.1.2",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.24.0",
+    "babel-plugin-transform-inline-environment-variables": "0.0.2",
+    "babel-preset-env": "^1.3.3",
+    "babel-preset-stage-2": "^6.22.0",
+    "eslint": "^3.18.0",
+    "eslint-plugin-import": "^2.2.0"
+  }
+}
