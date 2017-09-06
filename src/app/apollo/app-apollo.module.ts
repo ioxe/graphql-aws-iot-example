@@ -15,7 +15,6 @@ const { region, iotEndpoint, AppPrefix } = environment;
 const wsClient = new SubscriptionClient(iotEndpoint, {
     AppPrefix,
     region,
-    lazy: false,
     reconnect: true
 }, getCredentials);
 
