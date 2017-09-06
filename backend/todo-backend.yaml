@@ -307,6 +307,79 @@ Resources:
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
 
+  # Domain for demo
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: 404.html
+        RoutingRules:
+          - 
+            RoutingRuleCondition:
+              HttpErrorCodeReturnedEquals: 404
+            RedirectRule:
+              ReplaceKeyWith: index.html
+
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - HEAD
+              - DELETE
+            AllowedOrigins:
+              - '*'
+            ExposedHeaders:
+              - Date
+            MaxAge: '3600'
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref 'WebsiteBucket'
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject
+            Effect: Allow
+            Resource: !Join ['', ['arn:aws:s3:::', !Ref 'WebsiteBucket', /*]]
+            Principal: '*'
+  CloudfrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+        - DomainName: !GetAtt WebsiteBucket.DomainName
+          Id: graphqlAWSIOTTransportExample
+          S3OriginConfig:
+            OriginAccessIdentity: origin-access-identity/cloudfront/E3HBPMOKIIYXWL
+        Enabled: 'true'
+        DefaultRootObject: index.html
+        Aliases:
+          - serverlessgraphqlsubscriptions.girishnanda.com
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - DELETE
+          - GET
+          - HEAD
+          - OPTIONS
+          - PATCH
+          - POST
+          - PUT
+          TargetOriginId: graphqlAWSIOTTransportExample
+          ForwardedValues:
+            QueryString: 'false'
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: allow-all
+        PriceClass: PriceClass_200
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: 'true'
+
   # DDB Autoscaling policies
   TodosTableWriteCapacityScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget

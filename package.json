@@ -2,10 +2,16 @@
   "name": "graphql-aws-iot-transport-example",
   "version": "0.0.0",
   "license": "MIT",
+  "config": {
+    "s3BucketName": "todo-ws-transport-example-websitebucket-dgqb0k2ixlar",
+    "profile": "iox",
+    "region": "us-west-2"
+  },
   "scripts": {
     "ng": "ng",
     "start": "webpack-dev-server --port=4200",
-    "build": "webpack",
+    "build": "NODE_ENV=production webpack",
+    "publish": "npm run build && aws s3 cp --recursive dist/ s3://$npm_package_config_s3BucketName --profile $npm_package_config_profile --region $npm_package_config_region",
     "test": "karma start ./karma.conf.js",
     "lint": "ng lint",
     "e2e": "protractor ./protractor.conf.js",
@@ -76,6 +82,7 @@
     "ts-node": "~3.0.4",
     "tslint": "~5.3.2",
     "typescript": "~2.3.3",
+    "uglifyjs-webpack-plugin": "^0.4.6",
     "url-loader": "^0.5.7",
     "webpack": "~2.4.0",
     "webpack-dev-server": "~2.4.5"
