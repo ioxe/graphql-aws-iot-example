@@ -5,8 +5,8 @@
 
 export const environment = {
   production: false,
-  apiFunctionName: 's-todos-TodoApi-HFQ5TG6KZ64',
-  identityPoolId: 'us-west-2:128f0ba7-3691-4544-bf87-8b01f7aa95d1',
+  AppPrefix: 'IOX',
+  identityPoolId: 'us-west-2:23988fd3-692b-474c-9f99-67e9c6bc1100',
   region: 'us-west-2',
   iotEndpoint: 'afbxc4n5814kd.iot.us-west-2.amazonaws.com'
 };

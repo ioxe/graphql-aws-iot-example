@@ -1,0 +1,18 @@
+<div class="team-container">
+    <div class="team-main">
+        <div class="team-left-section">
+            <h1>TEAM: {{teamName | uppercase}}</h1>
+            <app-todo-create [teamName]="teamName"></app-todo-create>
+        </div>
+        <div class="team-right-section">
+            <h1> TODO ITEMS </h1>
+            <div *ngIf="!inited">
+                <md-progress-spinner class="loading-spinner" color="primary" mode="indeterminate"></md-progress-spinner>
+            </div>
+            <div *ngIf="inited">
+                <app-todo-list [todoItems]="todoItems"></app-todo-list>
+                <span *ngIf="!todoItems.length">No todo items found</span>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,46 @@
+{
+  "name": "todo-subscription-publisher",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "config": {
+    "devFunctionName": "todo-ws-transport-example-SubscriptionPublisher-156FH0BIGO2ZB",
+    "devCodeBucketName": "iox-playground",
+    "codeKey": "todo-subscription-publisher.zip",
+    "profile": "iox"
+  },
+  "scripts": {
+    "prebuild": "rm -rf dist && mkdir -p dist",
+    "build": "webpack",
+    "prezip": "rm -rf build && mkdir -p build",
+    "zip": "cd dist && zip -r ../build/build.zip *",
+    "lint": "eslint src",
+    "lint:dist": "eslint dist index.js",
+    "preupdate": "npm run build && npm run zip",
+    "update": "aws lambda update-function-code --function-name $npm_package_config_devFunctionName --zip-file fileb://$PWD/build/build.zip --profile $npm_package_config_profile --region us-west-2",
+    "updateS3": "npm run preupdate && aws s3 cp build/build.zip s3://$npm_package_config_devCodeBucketName/$npm_package_config_codeKey --profile $npm_package_config_profile --region us-west-2",
+    "schema:generate": "babel src --out-dir dist -s && node output-schema.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "graphql": "0.11.2",
+    "graphql-aws-iot-ws-transport": "git+https://github.com/ioxe/graphql-aws-iot-ws-transport.git",
+    "graphql-subscriptions": "^0.4.4",
+    "rimraf": "^2.6.1",
+    "source-map-support": "^0.4.14"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.102.0",
+    "babel-cli": "^6.24.0",
+    "babel-core": "^6.26.0",
+    "babel-eslint": "^6.1.2",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.24.0",
+    "babel-preset-env": "^1.3.3",
+    "babel-preset-stage-2": "^6.22.0",
+    "eslint": "^3.18.0",
+    "eslint-plugin-import": "^2.2.0",
+    "webpack": "^3.5.5"
+  }
+}

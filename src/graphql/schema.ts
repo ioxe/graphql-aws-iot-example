@@ -5,6 +5,8 @@ export type CreateTodoInput = {
   timestamp: string,
   name: string,
   content: string,
+  teamName: string,
+  author: string,
 };
 
 export type CreateTodoMutationVariables = {
@@ -19,20 +21,38 @@ export type CreateTodoMutation = {
   } | null,
 };
 
-export type TodosQueryVariables = {
-  firstTodos?: number | null,
+export type TeamTodoAddedSubscriptionVariables = {
+  teamName: string,
 };
 
-export type TodosQuery = {
-  // List of todos for user
-  todos:  Array< {
+export type TeamTodoAddedSubscription = {
+  // New todo added
+  teamTodoAdded:  {
     // Db uuid
     id: string,
     // Unique friendly name for todo item
     name: string,
-    // content of todo item
+    // Content of todo item
     content: string,
-    // iso date string
+    // ISO date string
+    timestamp: string,
+  } | null,
+};
+
+export type TeamTodosQueryVariables = {
+  teamName: string,
+};
+
+export type TeamTodosQuery = {
+  // List of todos for user
+  teamTodos:  Array< {
+    // Db uuid
+    id: string,
+    // Unique friendly name for todo item
+    name: string,
+    // Content of todo item
+    content: string,
+    // ISO date string
     timestamp: string,
   } | null > | null,
 };

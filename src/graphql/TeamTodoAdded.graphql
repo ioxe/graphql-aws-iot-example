@@ -1,0 +1,9 @@
+subscription TeamTodoAdded($teamName: String!) {
+    teamTodoAdded(teamName:$teamName) {
+        id
+        name
+        author
+        content
+        timestamp
+    }
+}

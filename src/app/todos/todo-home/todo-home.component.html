@@ -1,0 +1,9 @@
+<div style="margin:2em">
+    <h1>SELECT TEAM </h1>
+    <form class="select-team-form" [formGroup]="selectTeamForm" novalidate (ngSubmit)="onSubmit()">
+        <md-form-field class="full-width">
+            <input mdInput placeholder="Name" formControlName="teamName">
+        </md-form-field>
+        <button md-raised-button color="primary" type="submit">GO</button>
+    </form>
+</div>

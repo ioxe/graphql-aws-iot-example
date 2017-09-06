@@ -1,8 +1,0 @@
-query Todos($firstTodos:Int) {
-    todos(first:$firstTodos) {
-        id
-        name
-        content
-        timestamp
-    }
-}

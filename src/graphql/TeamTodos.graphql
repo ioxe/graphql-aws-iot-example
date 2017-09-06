@@ -1,0 +1,9 @@
+query TeamTodos($teamName: String!) {
+    teamTodos(teamName: $teamName) {
+        id
+        name
+        author
+        content
+        timestamp
+    }
+}

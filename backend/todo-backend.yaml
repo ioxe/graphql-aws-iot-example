@@ -1,28 +1,104 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Parameters:
   AppPrefix:
     Type: String
     Default: IOX
+  IotEndpoint:
+    Type: String
+    Default: afbxc4n5814kd.iot.us-west-2.amazonaws.com
+    Description: Iot Endpoint for region in which stack is being deployed
+  SubscriptionToClientIdsIndex:
+    Type: String
+    Default: subscriptionToClientId
+    Description: Index name for subscription to ClientIds
+  ClientIdToSubscriptionsIndex:
+    Type: String
+    Default: clientIdToSubscription
+    Description: Index name for ClientId to Subscription Names index
+  TeamNameToTodosIndex:
+    Type: String
+    Default: teamNameToTodos
+    Description: Index name for ClientId to Subscription Names index
+  # Currently min and max for autoscaling are the same across all tables
+  MaxDynamoDbAutoScalingCapacity:
+    Type: Number
+    Default: 200
+  MinDynamoDbAutoScalingCapacity:
+    Type: Number
+    Default: 1
+
 Resources:
+  # Api that runs graphql serverless subscriptions transport - handles all messages from socket
   TodoApi: 
-    Type: "AWS::Lambda::Function"
+    Type: AWS::Lambda::Function
     Properties: 
-      Handler: "index.handler"
-      Role: 
-        Fn::GetAtt: 
-          - "TodoApiExecutionRole"
-          - "Arn"
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn 
       Code: 
-        S3Bucket: "iox-playground"
-        S3Key: "todo-api.zip"
+        S3Bucket: iox-playground
+        S3Key: todo-api.zip
       Environment:
         Variables:
-          ConnectionsTableName: !Ref SocketConnectionTable
+          AppPrefix: !Ref AppPrefix
+          SubscriptionsTableName: !Ref SubscriptionsTable
+          SubscriptionPublisherFunctionName: !Ref SubscriptionPublisher
           TodosTableName: !Ref TodosTable
-          IotEndpoint: 'afbxc4n5814kd.iot.us-west-2.amazonaws.com'
-      Runtime: "nodejs6.10"
-      Timeout: "10"
-  TodoApiExecutionRole:
+          TeamNameToTodosIndex: !Ref TeamNameToTodosIndex
+          IotEndpoint: !Ref IotEndpoint
+      Runtime: 'nodejs6.10'
+      Timeout: '10'
+  TodoApiInvokePermission: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !GetAtt TodoApi.Arn
+      Action: lambda:InvokeFunction
+      Principal: iot.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+  
+  # Publisher publishes to all client ids for a particular subscription
+  SubscriptionPublisher: 
+    Type: AWS::Lambda::Function
+    Properties: 
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code: 
+        S3Bucket: iox-playground
+        S3Key: todo-subscription-publisher.zip
+      Environment:
+        Variables:
+          AppPrefix: !Ref AppPrefix
+          SubscriptionsTableName: !Ref SubscriptionsTable
+          SubscriptionToClientIdsIndex: !Ref SubscriptionToClientIdsIndex
+          TodosTableName: !Ref TodosTable
+          IotEndpoint: !Ref IotEndpoint
+      Runtime: 'nodejs6.10'
+      Timeout: 60
+  
+  # Pruner removes client data from all existing subscriptions in subscriptions table on disconnect event
+  SubscriptionPruner: 
+    Type: AWS::Lambda::Function
+    Properties: 
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code: 
+        S3Bucket: iox-playground
+        S3Key: todo-subscription-pruner.zip
+      Environment:
+        Variables:
+          SubscriptionsTableName: !Ref SubscriptionsTable
+          ClientIdToSubscriptionsIndex: !Ref ClientIdToSubscriptionsIndex
+      Runtime: 'nodejs6.10'
+      Timeout: 60
+  SubscriptionPrunerInvokePermission: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !GetAtt SubscriptionPruner.Arn
+      Action: lambda:InvokeFunction
+      Principal: iot.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+
+  # Shared execution role for lambdas
+  LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -34,47 +110,70 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      Path: "/"
-      Policies: 
-        - 
-          PolicyName: !Sub "${AWS::StackId}-todo-api-execution-policy"
-          PolicyDocument: 
-            Version: "2012-10-17"
-            Statement: 
-              - 
-                Effect: "Allow"
-                Action: "dynamodb:*"
-                Resource: "*"
-              - 
-                Effect: "Allow"
-                Action: "iot:*"
-                Resource: "*"
-              - 
-                Effect: "Allow"
-                Action: 'logs:*'
-                Resource: '*'
+      Path: '/'
+          
+  LambdaExecutionPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties: 
+      PolicyName: !Sub ${AWS::StackName}LambdaExecutionPolicy
+      PolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: Allow
+            Action: 
+              - dynamodb:DeleteItem
+              - dynamodb:GetItem
+              - dynamodb:BatchGetItem
+              - dynamodb:PutItem
+              - dynamodb:Query
+              - dynamodb:Scan
+            Resource: 
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TodosTable}
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TodosTable}/index/${TeamNameToTodosIndex}
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${SubscriptionsTable}
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${SubscriptionsTable}/index/${SubscriptionToClientIdsIndex}
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${SubscriptionsTable}/index/${ClientIdToSubscriptionsIndex}
+          -
+            Effect: Allow
+            Action: 
+              - iot:Publish
+              - iot:Receive
+            Resource:
+              - !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/events/* # lifecycle events
+              - !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${AppPrefix}/* # app prefix = namespace
+          - 
+            Effect: Allow
+            Action: logs:*
+            Resource: '*'
+          - 
+            Effect: Allow
+            Action: lambda:InvokeFunction
+            Resource:
+              - !GetAtt SubscriptionPublisher.Arn
+      Roles: 
+        - !Ref LambdaExecutionRole
   TodoIdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
-      IdentityPoolName: 'serverlesstodos'
       AllowUnauthenticatedIdentities: true
   TodoIdentityPoolRole:
-    Type: "AWS::Cognito::IdentityPoolRoleAttachment"
+    Type: 'AWS::Cognito::IdentityPoolRoleAttachment'
     Properties:
       IdentityPoolId: !Ref TodoIdentityPool
       Roles: 
         unauthenticated: !GetAtt TodoIdentityPoolUnauthenticatedRole.Arn 
   TodoIdentityPoolUnauthenticatedRole:
-    Type: "AWS::IAM::Role"
+    Type: 'AWS::IAM::Role'
     Properties: 
       AssumeRolePolicyDocument: 
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement: 
           - 
-            Effect: "Allow"
+            Effect: 'Allow'
             Principal: 
               Federated:
-                - "cognito-identity.amazonaws.com"
+                - 'cognito-identity.amazonaws.com'
             Action: 
                 - 'sts:AssumeRoleWithWebIdentity'
             Condition:
@@ -82,88 +181,371 @@ Resources:
                 'cognito-identity.amazonaws.com:aud': !Ref TodoIdentityPool
               'ForAnyValue:StringLike':
                 'cognito-identity.amazonaws.com:amr': 'unauthenticated'
-      Path: "/"
+      Path: '/'
       Policies: 
         - 
-          PolicyName: "unauthpolicy"
+          PolicyName: 'unauthpolicy'
           PolicyDocument: 
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement: 
               - 
-                Effect: "Allow"
-                Action: "iot:*"
-                Resource: "*"
+                Effect: Allow
+                Action: iot:Connect
+                Resource: 
+                  - !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/*
               - 
-                Effect: "Allow"
-                Action: "lambda:*"
-                Resource: "*"
+                Effect: Allow
+                Action: iot:Publish
+                Resource: 
+                  - !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${AppPrefix}/out 
+              - 
+                Effect: Allow
+                Action: 
+                  - iot:Subscribe
+                Resource: 
+                  - !Join ['', ['arn:aws:iot:', !Ref 'AWS::Region',':', !Ref 'AWS::AccountId', ':topicfilter/', !Ref AppPrefix, '/in/${iot:ClientId}']] 
+              - 
+                Effect: Allow
+                Action: 
+                  - iot:Receive
+                Resource: 
+                  - !Join ['', ['arn:aws:iot:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':topic/', !Ref AppPrefix, '/in/${iot:ClientId}']] 
   TodosTable: 
-    Type: "AWS::DynamoDB::Table"
+    Type: 'AWS::DynamoDB::Table'
     Properties: 
       AttributeDefinitions: 
         - 
-          AttributeName: "id"
-          AttributeType: "S"
+          AttributeName: 'id'
+          AttributeType: 'S'
+        - 
+          AttributeName: 'teamName'
+          AttributeType: 'S'
       KeySchema: 
         - 
-          AttributeName: "id"
-          KeyType: "HASH"
+          AttributeName: 'id'
+          KeyType: 'HASH'
       ProvisionedThroughput: 
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
       TimeToLiveSpecification:
         AttributeName: expiration
-        Enabled: true
+        Enabled: True
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref TeamNameToTodosIndex
+          KeySchema:
+            - 
+              AttributeName: teamName
+              KeyType: HASH
+          Projection: 
+            ProjectionType: 'ALL'
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+ # AWS IOT Rules
   TodoApiIoTRule: 
-    Type: "AWS::IoT::TopicRule"
+    Type: 'AWS::IoT::TopicRule'
     Properties: 
       TopicRulePayload:
         Actions:
-          - Kinesis:
-              RoleArn: !Ref EventStreamExecutionRole
-              StreamName: !Ref EventStreamFromClient
+          - Lambda:
+              FunctionArn: !GetAtt TodoApi.Arn
         RuleDisabled: false
         Sql: !Sub SELECT *, clientId() AS clientId FROM '${AppPrefix}/out'
-  TodoApiEventSourceMapping:
-      Type: "AWS::Lambda::EventSourceMapping"
-      EventSourceArn: !Join ['', ['arn:aws:kinesis:', !Ref AWS::Region, ':', !Ref: AWS:AccountId, ':stream/', !Ref: EventStreamFromClient]]
-  SocketConnectionTable:
+  SubscriptionPrunerIoTRule: 
+    Type: 'AWS::IoT::TopicRule'
+    Properties: 
+      TopicRulePayload:
+        Actions:
+          - Lambda:
+              FunctionArn: !GetAtt SubscriptionPruner.Arn
+        RuleDisabled: false
+        Sql: SELECT * FROM '$aws/events/presence/disconnected/#'
+  SubscriptionsTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        - AttributeName: clientId
+        - 
+          AttributeName: clientId
+          AttributeType: S
+        - 
+          AttributeName: subscriptionName
           AttributeType: S
       KeySchema:
-        - AttributeName: clientId
+        - 
+          AttributeName: clientId
           KeyType: HASH
+        - 
+          AttributeName: subscriptionName
+          KeyType: RANGE
       ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
-  EventStreamFromClient:
-    Type: 'AWS::Kinesis::Stream'
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref SubscriptionToClientIdsIndex
+          KeySchema:
+            - 
+              AttributeName: subscriptionName
+              KeyType: HASH
+          Projection: 
+            ProjectionType: 'ALL'
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+        -
+          IndexName: !Ref ClientIdToSubscriptionsIndex
+          KeySchema:
+            - 
+              AttributeName: clientId
+              KeyType: HASH
+          Projection: 
+            NonKeyAttributes:
+              - subscriptionName
+            ProjectionType: 'INCLUDE'
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+
+  # DDB Autoscaling policies
+  TodosTableWriteCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
-      RetentionPeriodHours: 168
-      ShardCount: 1  
-  EventStreamExecutionRole:
-    Type: AWS::IAM::Role
+      MaxCapacity: !Ref MaxDynamoDbAutoScalingCapacity
+      MinCapacity: !Ref MinDynamoDbAutoScalingCapacity
+      ResourceId: !Join [ /, [table, !Ref TodosTable]]
+      RoleARN: !GetAtt ScalingRole.Arn
+      ScalableDimension: dynamodb:table:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+  TodosTableWriteScalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: !Sub ${AWS::StackId}TodosTableWriteAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref TodosTableWriteCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  TodosTableReadCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxDynamoDbAutoScalingCapacity
+      MinCapacity: !Ref MinDynamoDbAutoScalingCapacity
+      ResourceId: !Join [ /, [table, !Ref TodosTable]]
+      RoleARN: !GetAtt ScalingRole.Arn
+      ScalableDimension: dynamodb:table:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+  TodosTableReadScalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: !Sub ${AWS::StackId}TodosTableReadAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref TodosTableReadCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+  TeamNameToTodosIndexWriteCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxDynamoDbAutoScalingCapacity
+      MinCapacity: !Ref MinDynamoDbAutoScalingCapacity
+      ResourceId: !Join [ /, [table, !Ref TodosTable, index, !Ref TeamNameToTodosIndex]]
+      RoleARN: !GetAtt ScalingRole.Arn
+      ScalableDimension: dynamodb:index:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+  TeamNameToTodosIndexWriteScalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: !Sub ${AWS::StackId}TeamNameToTodosIndexWriteAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref TeamNameToTodosIndexWriteCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  TeamNameToTodosIndexReadCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxDynamoDbAutoScalingCapacity
+      MinCapacity: !Ref MinDynamoDbAutoScalingCapacity
+      ResourceId: !Join [ /, [table, !Ref TodosTable, index, !Ref TeamNameToTodosIndex]]
+      RoleARN: !GetAtt ScalingRole.Arn
+      ScalableDimension: dynamodb:index:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+  TeamNameToTodosIndexReadScalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: !Sub ${AWS::StackId}TeamNameToTodosIndexReadAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref TeamNameToTodosIndexReadCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+  SubscriptionsTableWriteCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxDynamoDbAutoScalingCapacity
+      MinCapacity: !Ref MinDynamoDbAutoScalingCapacity
+      ResourceId: !Join [ /, [table, !Ref SubscriptionsTable]]
+      RoleARN: !GetAtt ScalingRole.Arn
+      ScalableDimension: dynamodb:table:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+  SubscriptionsTableWriteScalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: !Sub ${AWS::StackId}SubscriptionsTableWriteAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref SubscriptionsTableWriteCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  SubscriptionsTableReadCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxDynamoDbAutoScalingCapacity
+      MinCapacity: !Ref MinDynamoDbAutoScalingCapacity
+      ResourceId: !Join [ /, [table, !Ref SubscriptionsTable]]
+      RoleARN: !GetAtt ScalingRole.Arn
+      ScalableDimension: dynamodb:table:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+  SubscriptionsTableReadScalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: !Sub ${AWS::StackId}SubscriptionsTableReadAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref SubscriptionsTableReadCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+  SubscriptionToClientIdsIndexWriteCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxDynamoDbAutoScalingCapacity
+      MinCapacity: !Ref MinDynamoDbAutoScalingCapacity
+      ResourceId: !Join [ /, [table, !Ref SubscriptionsTable, index, !Ref SubscriptionToClientIdsIndex]]
+      RoleARN: !GetAtt ScalingRole.Arn
+      ScalableDimension: dynamodb:index:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+  SubscriptionToClientIdsIndexWriteScalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: !Sub ${AWS::StackId}SubscriptionToClientIdsWriteAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref SubscriptionToClientIdsIndexWriteCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  SubscriptionToClientIdsIndexReadCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxDynamoDbAutoScalingCapacity
+      MinCapacity: !Ref MinDynamoDbAutoScalingCapacity
+      ResourceId: !Join [ /, [table, !Ref SubscriptionsTable, index, !Ref SubscriptionToClientIdsIndex]]
+      RoleARN: !GetAtt ScalingRole.Arn
+      ScalableDimension: dynamodb:index:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+  SubscriptionToClientIdsIndexReadScalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: !Sub ${AWS::StackId}SubscriptionToClientIdsReadAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref SubscriptionToClientIdsIndexReadCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+  ClientIdToSubscriptionsIndexWriteCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxDynamoDbAutoScalingCapacity
+      MinCapacity: !Ref MinDynamoDbAutoScalingCapacity
+      ResourceId: !Join [ /, [table, !Ref SubscriptionsTable, index, !Ref ClientIdToSubscriptionsIndex]]
+      RoleARN: !GetAtt ScalingRole.Arn
+      ScalableDimension: dynamodb:index:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+  ClientIdToSubscriptionsIndexWriteScalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: !Sub ${AWS::StackId}ClientIdToSubscriptionsIndexWriteAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ClientIdToSubscriptionsIndexWriteCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  ClientIdToSubscriptionsIndexReadCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxDynamoDbAutoScalingCapacity
+      MinCapacity: !Ref MinDynamoDbAutoScalingCapacity
+      ResourceId: !Join [ /, [table, !Ref SubscriptionsTable, index, !Ref ClientIdToSubscriptionsIndex]]
+      RoleARN: !GetAtt ScalingRole.Arn
+      ScalableDimension: dynamodb:index:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+  ClientIdToSubscriptionsIndexReadScalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: !Sub ${AWS::StackId}ClientIdToSubscriptionsIndexReadAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ClientIdToSubscriptionsIndexReadCapacityScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+  ScalingRole:
+    Type: "AWS::IAM::Role"
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
-          - Effect: Allow
+          -
+            Effect: "Allow"
             Principal:
               Service:
-                - iot.amazonaws.com
+                - application-autoscaling.amazonaws.com
             Action:
-              - sts:AssumeRole
+              - "sts:AssumeRole"
       Path: "/"
-      Policies: 
-        - 
-          PolicyName: !Sub "${AWS::StackId}-todo-api-execution-policy"
-          PolicyDocument: 
+      Policies:
+        -
+          PolicyName: "root"
+          PolicyDocument:
             Version: "2012-10-17"
-            Statement: 
-              - 
+            Statement:
+              -
                 Effect: "Allow"
-                Action: "kinesis:*"
+                Action:
+                  - "dynamodb:DescribeTable"
+                  - "dynamodb:UpdateTable"
+                  - "cloudwatch:PutMetricAlarm"
+                  - "cloudwatch:DescribeAlarms"
+                  - "cloudwatch:GetMetricStatistics"
+                  - "cloudwatch:SetAlarmState"
+                  - "cloudwatch:DeleteAlarms"
                 Resource: "*"

@@ -1,0 +1,13 @@
+.full-width {
+    width: 100%;
+}
+
+.create-todo-form-container {
+    background-color: #f2f2f2;
+    padding: 2em;
+}
+
+.loading-spinner {
+    height: 1.5em;
+    width: 1.5em;
+}

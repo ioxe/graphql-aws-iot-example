@@ -1,5 +1,12 @@
 <!--The content below is only a placeholder and can be replaced.-->
-<h1> Todos </h1>
-<app-todo-create></app-todo-create>
-<app-todo-list [todoItems]="todoItems"></app-todo-list>
-
+<div class="app-container">
+    <div class="app-content-container">
+        <div class="todo-create-container">
+            <app-todo-create></app-todo-create>
+        </div>
+        <div class="todo-list-container">
+            <h1> List </h1>
+            <app-todo-list [todoItems]="todoItems"></app-todo-list>
+        </div>
+    </div>
+</div>

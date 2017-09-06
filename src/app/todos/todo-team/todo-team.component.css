@@ -1,0 +1,21 @@
+.team-container {
+    margin: 2em;
+}
+
+.team-main {
+    display: flex;
+}
+
+.team-left-section {
+    flex: 3;
+}
+
+.team-right-section {
+    flex: 8;
+    margin-left:3em;
+}
+
+.loading-spinner {
+    height: 1.5em;
+    width: 1.5em;
+}

@@ -2,28 +2,22 @@ import { Inject } from '@angular/core';
 import { NgModule } from '@angular/core';
 
 import { ApolloModule } from 'apollo-angular';
-import { ApolloClient} from 'apollo-client';
+import { ApolloClient } from 'apollo-client';
 
-// import { SubscriptionClient } from 'subscriptions-transport-ws';
+import { SubscriptionClient } from 'graphql-aws-iot-ws-client/src/client';
 
-import { SubscriptionClient } from 'graphql-aws-iot-ws-transport/src/client';
-
-import { refreshCredentials } from './refresh-credentials';
+import { getCredentials } from './get-credentials';
 
 import { environment } from '../../environments/environment';
-const { apiFunctionName, region, iotEndpoint} = environment;
+const { region, iotEndpoint, AppPrefix } = environment;
 
-const idToken = localStorage.getItem('id_token');
-// const GRAPHQL_ENDPOINT = 'ws://localhost:5000/graphql';
-
-// const wsClient = new SubscriptionClient(GRAPHQL_ENDPOINT, {
-//     reconnect: true
-// });
 
 const wsClient = new SubscriptionClient(iotEndpoint, {
-    APP_PREFIX: 'IOX',
+    AppPrefix,
+    region,
+    lazy: false,
     reconnect: true
-}, refreshCredentials);
+}, getCredentials);
 
 const client: ApolloClient = new ApolloClient({
     dataIdFromObject: (o: any) => o.id,

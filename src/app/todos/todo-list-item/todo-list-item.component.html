@@ -1,0 +1,18 @@
+<md-card class="example-card" style="width:300px">
+    <md-card-header>
+        <md-card-title><strong>{{item.name}}</strong></md-card-title>
+        <md-card-subtitle>{{item.timestamp | date:'medium' }}</md-card-subtitle>
+    </md-card-header>
+    <md-card-content>
+        <p style="margin-left: 0.5em">
+            {{item.content}}
+        </p>
+        <p style="margin-left: 0.5em">
+            <md-chip-list>
+                <md-chip>{{item.author}}</md-chip>
+            </md-chip-list>
+
+        </p>
+
+    </md-card-content>
+</md-card>

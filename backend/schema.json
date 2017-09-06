@@ -31,8 +31,8 @@
                   "defaultValue": "25"
                 },
                 {
-                  "name": "teamName",
-                  "description": "Name of team",
+                  "name": "after",
+                  "description": "Returns todo items that come after a specified cursor",
                   "type": {
                     "kind": "SCALAR",
                     "name": "String",
@@ -117,24 +117,8 @@
               "deprecationReason": null
             },
             {
-              "name": "author",
-              "description": "Author who created item",
-              "args": [],
-              "type": {
-                "kind": "NON_NULL",
-                "name": null,
-                "ofType": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
-                }
-              },
-              "isDeprecated": false,
-              "deprecationReason": null
-            },
-            {
               "name": "content",
-              "description": "Content of todo item",
+              "description": "content of todo item",
               "args": [],
               "type": {
                 "kind": "NON_NULL",
@@ -150,7 +134,7 @@
             },
             {
               "name": "teamName",
-              "description": "Team name",
+              "description": "team name",
               "args": [],
               "type": {
                 "kind": "NON_NULL",
@@ -166,7 +150,7 @@
             },
             {
               "name": "timestamp",
-              "description": "ISO date string",
+              "description": "iso date string",
               "args": [],
               "type": {
                 "kind": "NON_NULL",
@@ -349,20 +333,6 @@
                 }
               },
               "defaultValue": null
-            },
-            {
-              "name": "author",
-              "description": null,
-              "type": {
-                "kind": "NON_NULL",
-                "name": null,
-                "ofType": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
-                }
-              },
-              "defaultValue": null
             }
           ],
           "interfaces": null,
@@ -400,20 +370,9 @@
           "description": null,
           "fields": [
             {
-              "name": "teamTodoAdded",
+              "name": "todos",
               "description": "New todo added",
-              "args": [
-                {
-                  "name": "teamName",
-                  "description": "Team name filter for todoAdded subscription",
-                  "type": {
-                    "kind": "SCALAR",
-                    "name": "String",
-                    "ofType": null
-                  },
-                  "defaultValue": null
-                }
-              ],
+              "args": [],
               "type": {
                 "kind": "OBJECT",
                 "name": "Todo",

@@ -1,0 +1,19 @@
+<div class="create-todo-form-container">
+    <form class="create-todo-form" [formGroup]="todoCreateForm" novalidate (ngSubmit)="onSubmit()">
+        <md-form-field class="full-width">
+            <input mdInput placeholder="Item Name" formControlName="name">
+        </md-form-field>
+        <md-form-field class="full-width">
+            <input mdInput placeholder="Author" formControlName="author">
+        </md-form-field>
+        <md-form-field class="full-width">
+            <textarea mdInput placeholder="Content" rows="8" formControlName="content" style="resize:none;"></textarea>
+        </md-form-field>
+        <div *ngIf="loading">
+            <md-progress-spinner class="loading-spinner" color="primary" mode="indeterminate"></md-progress-spinner>
+        </div>
+        <div *ngIf="!loading">
+            <button md-raised-button color="primary" type="submit">Add Todo</button>
+        </div>
+    </form>
+</div>
