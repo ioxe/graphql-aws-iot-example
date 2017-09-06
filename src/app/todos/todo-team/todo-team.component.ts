@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DocumentNode } from 'graphql';
 import { Apollo } from 'apollo-angular';
 
@@ -25,6 +25,7 @@ export class TodoTeamComponent implements OnInit, OnDestroy {
     todoItems = [];
     constructor(
         private route: ActivatedRoute,
+        private router: Router,
         private apollo: Apollo,
         private ref: ChangeDetectorRef
     ) {
@@ -45,6 +46,10 @@ export class TodoTeamComponent implements OnInit, OnDestroy {
                 this.inited = true;
             });
         this.initTodoAddedSubscription();
+    }
+
+    goBack() {
+        this.router.navigate(['']);
     }
 
     initTodoAddedSubscription() {
@@ -93,6 +98,7 @@ export class TodoTeamComponent implements OnInit, OnDestroy {
             this.teamTodosQuerySub.unsubscribe();
         }
         if (this.teamTodosSubscriptionSub) {
+            console.log('unsubscribing from subscription')
             this.teamTodosSubscriptionSub.unsubscribe();
         }
     }

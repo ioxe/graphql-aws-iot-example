@@ -1,7 +1,12 @@
 <div class="team-container">
     <div class="team-main">
-        <div class="team-left-section">
-            <h1>TEAM: {{teamName | uppercase}}</h1>
+        <div class="team-left-section;display:flex;align-items:center;">
+            <div style="display:flex;align-items:center;">
+                <button style="display:inline-block;" md-icon-button (click)="goBack()">
+                <md-icon style="font-size:3em;margin-right:1em;">keyboard_arrow_left</md-icon>
+                </button>
+                <h1>TEAM: {{teamName | uppercase}}</h1>
+            </div>
             <app-todo-create [teamName]="teamName"></app-todo-create>
         </div>
         <div class="team-right-section">

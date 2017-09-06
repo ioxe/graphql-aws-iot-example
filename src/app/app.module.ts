@@ -7,6 +7,7 @@ import {
   MdButtonModule,
   MdCheckboxModule,
   MdInputModule,
+  MdIconModule,
   MdCardModule,
   MdProgressSpinnerModule,
   MdChipsModule
@@ -42,6 +43,7 @@ import { TodoListComponent } from './todos/todo-list/todo-list.component';
     MdCardModule,
     MdProgressSpinnerModule,
     MdChipsModule,
+    MdIconModule,
     AppApolloModule,
     AppRoutingModule
   ],
