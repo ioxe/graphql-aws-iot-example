@@ -13,7 +13,7 @@ export const handler = (event, context, callback) => {
 
     if (!subscriptionPruner) {
         const subscriptionPrunerOptions = {
-            tableName: process.env.SubscriptionsTableName,
+            subscriptionsTableName: process.env.SubscriptionsTableName,
             clientIdtoSubscriptionsIndex: process.env.ClientIdToSubscriptionsIndex
         };
         subscriptionPruner = new SubscriptionPruner(subscriptionPrunerOptions);

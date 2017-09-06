@@ -12,9 +12,9 @@ export const handler = (event, context, callback) => {
     const subscriptionPublisherOptions = {
         appPrefix: process.env.AppPrefix,
         iotEndpoint: process.env.IotEndpoint,
-        tableName: process.env.SubscriptionsTableName,
+        subscriptionsTableName: process.env.SubscriptionsTableName,
         subscriptionToClientIdsIndex: process.env.SubscriptionToClientIdsIndex,
-        triggerToFilterFunctionsMap: {
+        triggerNameToFilterFunctionsMap: {
             NEW_TODO: (payload, variables) => {
                 return payload.teamTodoAdded.teamName === variables.teamName;
             }
