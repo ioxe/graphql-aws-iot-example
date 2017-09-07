@@ -7,19 +7,20 @@ AWS.config.region = 'us-west-2';
 import { Credentials } from 'aws-sdk/global';
 
 export const getCredentials = () => {
-    let credentials;
-    if (localStorage.getItem('credentials')) {
-        const identityId = JSON.parse(localStorage.getItem('credentials'))._identityId;
-        credentials = new CognitoIdentityCredentials({
-            IdentityId: identityId,
-        });
-    } else {
-        credentials = new CognitoIdentityCredentials({
-            IdentityPoolId: environment.identityPoolId,
-        });
+    // cognito specific workaround
+    // clientId must be unique per tab. If localstorage is not cleared - the second tab will try to reuse the same identity.
+    // if you dont want to support multiple tabs then this workaround is not needed.
+    for (var key in localStorage){
+        if (key.indexOf('aws.cognito.') !== -1) {
+            localStorage.removeItem(key);
+        }
     }
+    const credentials = new CognitoIdentityCredentials({
+        IdentityPoolId: environment.identityPoolId,
+    });
     return credentials.refreshPromise().then((res: any) => {
-        localStorage.setItem('credentials', JSON.stringify(credentials));
-        return { credentials, clientId: credentials._identityId };
+        console.log((credentials as any)._identityId);
+        
+        return { credentials, clientId: (credentials as any)._identityId };
     });
 };
