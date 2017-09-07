@@ -98,7 +98,6 @@ export class TodoTeamComponent implements OnInit, OnDestroy {
             this.teamTodosQuerySub.unsubscribe();
         }
         if (this.teamTodosSubscriptionSub) {
-            console.log('unsubscribing from subscription')
             this.teamTodosSubscriptionSub.unsubscribe();
         }
     }
