@@ -138,10 +138,14 @@ Resources:
             Effect: Allow
             Action: 
               - iot:Publish
+            Resource: '*' # below restriction should work - to debug later
+              # - !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${AppPrefix}/in/* # app prefix = namespace
+          -
+            Effect: Allow
+            Action: 
               - iot:Receive
             Resource:
               - !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/events/* # lifecycle events
-              - !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${AppPrefix}/* # app prefix = namespace
           - 
             Effect: Allow
             Action: logs:*
