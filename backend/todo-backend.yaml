@@ -46,7 +46,9 @@ Resources:
           TeamNameToTodosIndex: !Ref TeamNameToTodosIndex
           IotEndpoint: !Ref IotEndpoint
       Runtime: 'nodejs6.10'
-      Timeout: '10'
+      Timeout: 10
+      TracingConfig:
+        Mode: "Active"
   TodoApiInvokePermission: 
     Type: AWS::Lambda::Permission
     Properties: 
@@ -73,6 +75,8 @@ Resources:
           IotEndpoint: !Ref IotEndpoint
       Runtime: 'nodejs6.10'
       Timeout: 60
+      TracingConfig:
+        Mode: "Active"
   
   # Pruner removes client data from all existing subscriptions in subscriptions table on disconnect event
   SubscriptionPruner: 
@@ -89,6 +93,8 @@ Resources:
           ClientIdToSubscriptionsIndex: !Ref ClientIdToSubscriptionsIndex
       Runtime: 'nodejs6.10'
       Timeout: 60
+      TracingConfig:
+        Mode: "Active"
   SubscriptionPrunerInvokePermission: 
     Type: AWS::Lambda::Permission
     Properties: 
@@ -151,6 +157,12 @@ Resources:
             Action: lambda:InvokeFunction
             Resource:
               - !GetAtt SubscriptionPublisher.Arn
+          -
+            Effect: Allow
+            Action: 
+              - xray:PutTraceSegments
+              - xray:PutTelemetryRecords
+            Resource: '*'
       Roles: 
         - !Ref LambdaExecutionRole
   TodoIdentityPool:
