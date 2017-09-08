@@ -1,32 +1,56 @@
 import 'source-map-support/register';
 
-import 'aws-sdk';
+import AWSXray from 'aws-xray-sdk';
+var AWS = AWSXray.captureAWS(require('aws-sdk')); // eslint-disable-line
 
 import { SubscriptionPruner } from 'graphql-aws-iot-ws-transport';
 
 // Currently only subscribed to the AWS IoT disconnected lifecycle event
 
 let subscriptionPruner;
+let db;
+
 export const handler = (event, context, callback) => {
     console.log(JSON.stringify(event));
     const { clientId } = event;
 
-    if (!subscriptionPruner) {
-        const subscriptionPrunerOptions = {
-            subscriptionsTableName: process.env.SubscriptionsTableName,
-            clientIdtoSubscriptionsIndex: process.env.ClientIdToSubscriptionsIndex
-        };
-        subscriptionPruner = new SubscriptionPruner(subscriptionPrunerOptions);
+    if (!db) {
+        db = new AWS.DynamoDB.DocumentClient();
     }
 
-    subscriptionPruner.onEvent(clientId).
-        then(_ => {
+    onDisconnect(clientId);
+
+    function onDisconnect(clientId) {
+        const params = {
+            TableName: process.env.SubscriptionsTableName,
+            IndexName: process.env.ClientIdToSubscriptionsIndex,
+            KeyConditionExpression: 'clientId = :hkey',
+            ExpressionAttributeValues: {
+                ':hkey': clientId
+            }
+        }
+
+        return db.query(params).promise().then(res => {
+            let promises = [];
+            if (res.Items && res.Items.length) {
+                res.Items.forEach(item => {
+                    const deleteParams = {
+                        TableName: process.env.SubscriptionsTableName,
+                        Key: {
+                            clientId,
+                            subscriptionName: item.subscriptionName
+                        }
+                    }
+                    promises.push(db.delete(deleteParams).promise())
+                });
+                return Promise.all(promises);
+            }
+        }).then(res => {
+            callback();
+        }).catch(err => {
+            console.log('Prune error')
             callback();
         })
-        .catch(err => {
-            console.log('Pruner error');
-            console.log(err);
-            callback();
-        });
+    };
 
-};
+}

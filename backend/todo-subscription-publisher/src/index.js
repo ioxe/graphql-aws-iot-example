@@ -1,42 +1,89 @@
 import 'source-map-support/register';
 
+import AWSXray from 'aws-xray-sdk';
+var AWS = AWSXray.captureAWS(require('aws-sdk')); // eslint-disable-line
+
+
 import { SubscriptionPublisher } from 'graphql-aws-iot-ws-transport';
 import schema from '../../todo-api/src/root.schema';
 
+let db;
 let publisher;
 
 export const handler = (event, context, callback) => {
     console.log(JSON.stringify(event));
     const { triggerName, payload } = event;
 
+    const triggerNameToFilterFunctionsMap = {
+        NEW_TODO: (payload, variables) => {
+            return payload.teamTodoAdded.teamName === variables.teamName;
+        }
+    };
+
+    const triggerNameToSubscriptionNamesMap = {
+        NEW_TODO: ['teamTodoAdded']
+    }
+
     const subscriptionPublisherOptions = {
         appPrefix: process.env.AppPrefix,
         iotEndpoint: process.env.IotEndpoint,
-        subscriptionsTableName: process.env.SubscriptionsTableName,
-        subscriptionToClientIdsIndex: process.env.SubscriptionToClientIdsIndex,
-        triggerNameToFilterFunctionsMap: {
-            NEW_TODO: (payload, variables) => {
-                return payload.teamTodoAdded.teamName === variables.teamName;
-            }
-        },
-        triggerNameToSubscriptionNamesMap: {
-          NEW_TODO: 'teamTodoAdded'
-        },
         schema
     };
-    
+
     if (!publisher) {
         publisher = new SubscriptionPublisher(subscriptionPublisherOptions);
     }
-    
-    publisher.onEvent(triggerName, payload)
+
+    if (!db) {
+        db = new AWS.DynamoDB.DocumentClient();
+    }
+
+
+    onTrigger(triggerName, payload)
         .then(res => {
             console.log(res);
-            callback();
         })
         .catch(err => {
-            console.log('Publisher error');
+            console.log('Subscription Publisher Error');
             console.log(err);
-            callback();
+        })
+
+    function onTrigger(triggerName, payload) {
+        let promises = [];
+        let subscriptions = triggerNameToSubscriptionNamesMap[triggerName];        
+        subscriptions.forEach(subscriptionName => {
+            promises.push(publishForSubscription(subscriptionName, triggerName, payload))
         });
+        return Promise.all(promises);
+    }
+
+    function publishForSubscription(subscriptionName, triggerName, payload) {
+        const params = {
+            TableName: process.env.SubscriptionsTableName,
+            IndexName: process.env.SubscriptionToClientIdsIndex,
+            KeyConditionExpression: 'subscriptionName = :hkey',
+            ExpressionAttributeValues: {
+                ':hkey': subscriptionName
+            }
+        }
+
+        const promises = [];
+
+        return db.query(params).promise()
+            .then(res => {
+                if (res.Items && res.Items.length) {
+                    res.Items.forEach(item => {
+                        if (triggerNameToFilterFunctionsMap[triggerName]) {
+                            const execute = triggerNameToFilterFunctionsMap[triggerName](payload, item.variableValues);
+                            if (!execute) return;
+                        }
+                        promises.push(publisher.executeQueryAndSendMessage(item, payload));
+                    })
+                }
+                if (!promises.length) {
+                    promises.push(Promise.resolve(null));
+                }
+                return Promise.all(promises)
+            });
+    }
 };

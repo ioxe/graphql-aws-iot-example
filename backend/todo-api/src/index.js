@@ -1,12 +1,13 @@
 import 'source-map-support/register';
 
-import AWS from 'aws-sdk';
+import AWSXray from 'aws-xray-sdk';
+const AWS = AWSXray.captureAWS(require('aws-sdk'));
 
 import { SubscriptionServer, PubSub } from 'graphql-aws-iot-ws-transport';
 
 import schema from './root.schema';
 
-let documentClient;
+let db;
 let server;
 let pubsub;
 
@@ -14,8 +15,8 @@ export const handler = (event, context, callback) => {
     console.log('Todo api handler running');
     console.log(JSON.stringify(event));
 
-    if (!documentClient) {
-        documentClient = new AWS.DynamoDB.DocumentClient();
+    if (!db) {
+        db = new AWS.DynamoDB.DocumentClient();
     }
 
     if (!pubsub) {
@@ -28,7 +29,23 @@ export const handler = (event, context, callback) => {
             appPrefix: process.env.AppPrefix,
             iotEndpoint: process.env.IotEndpoint,
             schema,
-            subscriptionsTableName: process.env.SubscriptionsTableName
+            addSubscriptionFunction: (subscription) => {
+                const putParams = {
+                    TableName: process.env.SubscriptionsTableName,
+                    Item: subscription
+                }
+                return db.put(putParams).promise();
+            },
+            removeSubscriptionFunction: ({ clientId, subscriptionName }) => {
+                const params = {
+                    TableName: process.env.SubscriptionsTableName,
+                    Key: {
+                        clientId,
+                        subscriptionName: subscriptionName
+                    }
+                }
+                return db.delete(params).promise();
+            }
         };
         server = new SubscriptionServer(subscriptionServerOptions);
     }
@@ -37,7 +54,7 @@ export const handler = (event, context, callback) => {
     const parsedMessage = JSON.parse(data);
 
     const graphqlContext = {
-        documentClient,
+        documentClient: db,
         TableName: process.env.TodosTableName,
         pubsub
     };

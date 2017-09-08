@@ -25,7 +25,7 @@ Parameters:
     Default: 200
   MinDynamoDbAutoScalingCapacity:
     Type: Number
-    Default: 1
+    Default: 20
 
 Resources:
   # Api that runs graphql serverless subscriptions transport - handles all messages from socket
@@ -74,6 +74,7 @@ Resources:
           TodosTableName: !Ref TodosTable
           IotEndpoint: !Ref IotEndpoint
       Runtime: 'nodejs6.10'
+      MemorySize: 384
       Timeout: 60
       TracingConfig:
         Mode: "Active"

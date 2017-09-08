@@ -24,6 +24,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-xray-sdk": "^1.1.4",
     "graphql": "0.11.2",
     "graphql-aws-iot-ws-transport": "git+https://github.com/ioxe/graphql-aws-iot-server.git",
     "graphql-subscriptions": "^0.4.4",
