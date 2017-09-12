@@ -12,7 +12,7 @@
     "start": "webpack-dev-server --port=4200",
     "prebuild": "rm -rf dist",
     "build": "NODE_ENV=production webpack",
-    "publish": "npm run build && aws s3 cp --recursive dist/ s3://$npm_package_config_s3BucketName --profile $npm_package_config_profile --region $npm_package_config_region",
+    "update": "npm run build && aws s3 cp --recursive dist/ s3://$npm_package_config_s3BucketName --profile $npm_package_config_profile --region $npm_package_config_region",
     "test": "karma start ./karma.conf.js",
     "lint": "ng lint",
     "e2e": "protractor ./protractor.conf.js",
