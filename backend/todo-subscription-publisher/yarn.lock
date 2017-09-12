@@ -186,8 +186,8 @@ asynckit@^0.4.0:
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
 
 aws-sdk@^2.102.0:
-  version "2.111.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.111.0.tgz#a834ce13ff440b348e45e047c8dc7bd696f1b26d"
+  version "2.113.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.113.0.tgz#8fb95f4654e851c761603157c7cf7a431af6fd6d"
   dependencies:
     buffer "4.9.1"
     crypto-browserify "1.0.9"
@@ -991,8 +991,8 @@ camelcase@^4.1.0:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-4.1.0.tgz#d545635be1e33c542649c69173e5de6acfae34dd"
 
 caniuse-lite@^1.0.30000718:
-  version "1.0.30000726"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30000726.tgz#966a753fa107a09d4131cf8b3d616723a06ccf7e"
+  version "1.0.30000727"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30000727.tgz#20c895768398ded5f98a4beab4a76c285def41d2"
 
 caseless@~0.12.0:
   version "0.12.0"
@@ -1833,9 +1833,9 @@ graceful-fs@^4.1.2, graceful-fs@^4.1.4:
   version "4.1.11"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.11.tgz#0e8bdfe4d1ddb8854d64e04ea7c00e2a026e5658"
 
-"graphql-aws-iot-ws-transport@git+https://github.com/ioxe/graphql-aws-iot-server.git":
+graphql-aws-iot-server@^0.0.1:
   version "0.0.1"
-  resolved "git+https://github.com/ioxe/graphql-aws-iot-server.git#6c9af9159a03eaf2dbbe6faf3cb026d67412a1f9"
+  resolved "https://registry.yarnpkg.com/graphql-aws-iot-server/-/graphql-aws-iot-server-0.0.1.tgz#a6404e3a0fd45c558a683bbf3edba96fb934a9dd"
 
 graphql-subscriptions@^0.4.4:
   version "0.4.4"
@@ -1845,9 +1845,9 @@ graphql-subscriptions@^0.4.4:
     es6-promise "^4.0.5"
     iterall "^1.1.1"
 
-graphql@0.11.2:
-  version "0.11.2"
-  resolved "https://registry.yarnpkg.com/graphql/-/graphql-0.11.2.tgz#13edb9f982f3571dd68ec4e9f3d6aca7e1ba57ef"
+graphql@^0.11.2:
+  version "0.11.3"
+  resolved "https://registry.yarnpkg.com/graphql/-/graphql-0.11.3.tgz#9934e2df28f17d397a85f83cb39d1d179bffef47"
   dependencies:
     iterall "^1.1.0"
 
@@ -2189,8 +2189,8 @@ js-tokens@^3.0.0, js-tokens@^3.0.2:
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.2.tgz#9866df395102130e38f7f996bceb65443209c25b"
 
 js-yaml@^3.5.1:
-  version "3.9.1"
-  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.9.1.tgz#08775cebdfdd359209f0d2acd383c8f86a6904a0"
+  version "3.10.0"
+  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.10.0.tgz#2e78441646bd4682e963f22b6e92823c309c62dc"
   dependencies:
     argparse "^1.0.7"
     esprima "^4.0.0"
@@ -2696,8 +2696,8 @@ path-type@^2.0.0:
     pify "^2.0.0"
 
 pbkdf2@^3.0.3:
-  version "3.0.13"
-  resolved "https://registry.yarnpkg.com/pbkdf2/-/pbkdf2-3.0.13.tgz#c37d295531e786b1da3e3eadc840426accb0ae25"
+  version "3.0.14"
+  resolved "https://registry.yarnpkg.com/pbkdf2/-/pbkdf2-3.0.14.tgz#a35e13c64799b06ce15320f459c230e68e73bade"
   dependencies:
     create-hash "^1.1.2"
     create-hmac "^1.1.4"
@@ -3011,8 +3011,8 @@ right-align@^0.1.1:
     align-text "^0.1.1"
 
 rimraf@2, rimraf@^2.2.8, rimraf@^2.5.1, rimraf@^2.6.1:
-  version "2.6.1"
-  resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-2.6.1.tgz#c2338ec643df7a1b7fe5c54fa86f57428a55f33d"
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-2.6.2.tgz#2ed8150d24a16ea8651e6d6ef0f47c4158ce7a36"
   dependencies:
     glob "^7.0.5"
 
@@ -3116,8 +3116,8 @@ source-list-map@^2.0.0:
   resolved "https://registry.yarnpkg.com/source-list-map/-/source-list-map-2.0.0.tgz#aaa47403f7b245a92fbc97ea08f250d6087ed085"
 
 source-map-support@^0.4.14, source-map-support@^0.4.15:
-  version "0.4.17"
-  resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.4.17.tgz#6f2150553e6375375d0ccb3180502b78c18ba430"
+  version "0.4.18"
+  resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.4.18.tgz#0286a6de8be42641338594e97ccea75f0a2c585f"
   dependencies:
     source-map "^0.5.6"
 

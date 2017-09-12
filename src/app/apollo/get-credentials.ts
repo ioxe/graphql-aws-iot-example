@@ -6,11 +6,11 @@ declare var AWS: any;
 AWS.config.region = 'us-west-2';
 import { Credentials } from 'aws-sdk/global';
 
-export const getCredentials = () => {
+export const getCredentialsFunction = () => {
     const credentials = new CognitoIdentityCredentials({
         IdentityPoolId: environment.identityPoolId,
     });
     return credentials.refreshPromise().then((res: any) => {
-        return { credentials };
+        return credentials;
     });
 };

@@ -89,7 +89,7 @@ const config = {
   },
   "output": {
     "path": path.join(process.cwd(), "dist"),
-    "filename": "[name].bundle.js",
+    "filename": "[name].[hash].bundle.js",
     "chunkFilename": "[id].chunk.js"
   },
   "module": {

@@ -4,7 +4,7 @@ import AWSXray from 'aws-xray-sdk';
 var AWS = AWSXray.captureAWS(require('aws-sdk')); // eslint-disable-line
 
 
-import { SubscriptionPublisher } from 'graphql-aws-iot-ws-transport';
+import { SubscriptionPublisher } from 'graphql-aws-iot-server';
 import schema from '../../todo-api/src/root.schema';
 
 let db;
@@ -67,23 +67,23 @@ export const handler = (event, context, callback) => {
             }
         }
 
-        const promises = [];
+        let subscriptionsToExecute = [];
 
         return db.query(params).promise()
             .then(res => {
                 if (res.Items && res.Items.length) {
-                    res.Items.forEach(item => {
+                    res.Items.forEach(subscription => {
                         if (triggerNameToFilterFunctionsMap[triggerName]) {
-                            const execute = triggerNameToFilterFunctionsMap[triggerName](payload, item.variableValues);
+                            const execute = triggerNameToFilterFunctionsMap[triggerName](payload, subscription.variableValues);
                             if (!execute) return;
                         }
-                        promises.push(publisher.executeQueryAndSendMessage(item, payload));
+                        subscriptionsToExecute.push(subscription);
                     })
                 }
-                if (!promises.length) {
-                    promises.push(Promise.resolve(null));
+                if (!subscriptionsToExecute.length) {
+                    return Promise.resolve(null);
                 }
-                return Promise.all(promises)
+                return publisher.executeQueriesAndSendMessages(subscriptionsToExecute, payload)
             });
     }
 };

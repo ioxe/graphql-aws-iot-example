@@ -38,8 +38,8 @@
   },
   "dependencies": {
     "aws-xray-sdk": "^1.1.4",
-    "graphql": "0.11.2",
-    "graphql-aws-iot-ws-transport": "git+https://github.com/ioxe/graphql-aws-iot-server.git",
+    "graphql": "^0.11.2",
+    "graphql-aws-iot-server": "^0.0.1",
     "graphql-subscriptions": "^0.4.4",
     "source-map-support": "^0.4.16"
   }

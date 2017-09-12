@@ -3,7 +3,7 @@ import 'source-map-support/register';
 import AWSXray from 'aws-xray-sdk';
 var AWS = AWSXray.captureAWS(require('aws-sdk')); // eslint-disable-line
 
-import { SubscriptionPruner } from 'graphql-aws-iot-ws-transport';
+import { SubscriptionPruner } from 'graphql-aws-iot-server';
 
 // Currently only subscribed to the AWS IoT disconnected lifecycle event
 

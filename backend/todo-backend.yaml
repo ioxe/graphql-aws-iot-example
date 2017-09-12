@@ -332,13 +332,6 @@ Resources:
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: 404.html
-        RoutingRules:
-          - 
-            RoutingRuleCondition:
-              HttpErrorCodeReturnedEquals: 404
-            RedirectRule:
-              ReplaceKeyWith: index.html
-
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders:
@@ -377,7 +370,7 @@ Resources:
         Enabled: 'true'
         DefaultRootObject: index.html
         Aliases:
-          - serverlessgraphqlsubscriptions.girishnanda.com
+          - todo.girishnanda.com
         DefaultCacheBehavior:
           AllowedMethods:
           - DELETE
@@ -392,10 +385,16 @@ Resources:
             QueryString: 'false'
             Cookies:
               Forward: none
-          ViewerProtocolPolicy: allow-all
+          ViewerProtocolPolicy: redirect-to-https
         PriceClass: PriceClass_200
         ViewerCertificate:
-          CloudFrontDefaultCertificate: 'true'
+          AcmCertificateArn: arn:aws:acm:us-east-1:167274848478:certificate/012a8297-884d-4200-ab76-d8e3ead3366c
+          SslSupportMethod: sni-only
+        CustomErrorResponses:
+          - ErrorCachingMinTTL: '0'
+            ErrorCode: '404'
+            ResponseCode: '200'
+            ResponsePagePath: /index.html
 
   # DDB Autoscaling policies
   TodosTableWriteCapacityScalableTarget:

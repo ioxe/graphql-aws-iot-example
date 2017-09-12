@@ -3,12 +3,12 @@ import 'source-map-support/register';
 import AWSXray from 'aws-xray-sdk';
 const AWS = AWSXray.captureAWS(require('aws-sdk'));
 
-import { SubscriptionServer, PubSub } from 'graphql-aws-iot-ws-transport';
+import { SubscriptionManager, PubSub } from 'graphql-aws-iot-server';
 
 import schema from './root.schema';
 
 let db;
-let server;
+let manager;
 let pubsub;
 
 export const handler = (event, context, callback) => {
@@ -24,8 +24,8 @@ export const handler = (event, context, callback) => {
         pubsub = new PubSub(process.env.SubscriptionPublisherFunctionName);
     }
 
-    if (!server) {
-        const subscriptionServerOptions = {
+    if (!manager) {
+        const subscriptionManagerOptions = {
             appPrefix: process.env.AppPrefix,
             iotEndpoint: process.env.IotEndpoint,
             schema,
@@ -47,7 +47,7 @@ export const handler = (event, context, callback) => {
                 return db.delete(params).promise();
             }
         };
-        server = new SubscriptionServer(subscriptionServerOptions);
+        manager = new SubscriptionManager(subscriptionManagerOptions);
     }
 
     const { data, clientId } = event;
@@ -59,7 +59,7 @@ export const handler = (event, context, callback) => {
         pubsub
     };
 
-    server.onMessage(parsedMessage, clientId, graphqlContext)
+    manager.onMessage(parsedMessage, clientId, graphqlContext)
         .then(_ => {
             callback();
         })
