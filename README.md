@@ -1,7 +1,8 @@
 # ServerlessGraphqlSubscriptions
 
-Demo url:
-http://todo-ws-transport-example-websitebucket-dgqb0k2ixlar.s3-website-us-west-2.amazonaws.com/
+[Demo](https://todo.girishnanda.com)
+
+Open 2 different tabs to the same team url i.e. (https://todo.girishnanda/team/${teamName}. If one tab creates a todo, it will appear up in the other tab.
 
 See https://github.com/ioxe/graphql-aws-iot-ws-transport for server side ws transport package
 
