@@ -33,7 +33,7 @@ export const handler = (event, context, callback) => {
                 const putParams = {
                     TableName: process.env.SubscriptionsTableName,
                     Item: subscription
-                }
+                };
                 return db.put(putParams).promise();
             },
             removeSubscriptionFunction: ({ clientId, subscriptionName }) => {
@@ -43,7 +43,7 @@ export const handler = (event, context, callback) => {
                         clientId,
                         subscriptionName: subscriptionName
                     }
-                }
+                };
                 return db.delete(params).promise();
             }
         };

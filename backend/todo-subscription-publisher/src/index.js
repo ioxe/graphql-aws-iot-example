@@ -22,7 +22,7 @@ export const handler = (event, context, callback) => {
 
     const triggerNameToSubscriptionNamesMap = {
         NEW_TODO: ['teamTodoAdded']
-    }
+    };
 
     const subscriptionPublisherOptions = {
         appPrefix: process.env.AppPrefix,
@@ -42,17 +42,18 @@ export const handler = (event, context, callback) => {
     onTrigger(triggerName, payload)
         .then(res => {
             console.log(res);
+            callback();
         })
         .catch(err => {
             console.log('Subscription Publisher Error');
             console.log(err);
-        })
+        });
 
     function onTrigger(triggerName, payload) {
         let promises = [];
         let subscriptions = triggerNameToSubscriptionNamesMap[triggerName];        
         subscriptions.forEach(subscriptionName => {
-            promises.push(publishForSubscription(subscriptionName, triggerName, payload))
+            promises.push(publishForSubscription(subscriptionName, triggerName, payload));
         });
         return Promise.all(promises);
     }
@@ -65,7 +66,7 @@ export const handler = (event, context, callback) => {
             ExpressionAttributeValues: {
                 ':hkey': subscriptionName
             }
-        }
+        };
 
         let subscriptionsToExecute = [];
 
@@ -78,12 +79,12 @@ export const handler = (event, context, callback) => {
                             if (!execute) return;
                         }
                         subscriptionsToExecute.push(subscription);
-                    })
+                    });
                 }
                 if (!subscriptionsToExecute.length) {
                     return Promise.resolve(null);
                 }
-                return publisher.executeQueriesAndSendMessages(subscriptionsToExecute, payload)
+                return publisher.executeQueriesAndSendMessages(subscriptionsToExecute, payload);
             });
     }
 };

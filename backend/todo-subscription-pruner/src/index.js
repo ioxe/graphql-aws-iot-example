@@ -3,11 +3,8 @@ import 'source-map-support/register';
 import AWSXray from 'aws-xray-sdk';
 var AWS = AWSXray.captureAWS(require('aws-sdk')); // eslint-disable-line
 
-import { SubscriptionPruner } from 'graphql-aws-iot-server';
-
 // Currently only subscribed to the AWS IoT disconnected lifecycle event
 
-let subscriptionPruner;
 let db;
 
 export const handler = (event, context, callback) => {
@@ -28,7 +25,7 @@ export const handler = (event, context, callback) => {
             ExpressionAttributeValues: {
                 ':hkey': clientId
             }
-        }
+        };
 
         return db.query(params).promise().then(res => {
             let promises = [];
@@ -40,17 +37,17 @@ export const handler = (event, context, callback) => {
                             clientId,
                             subscriptionName: item.subscriptionName
                         }
-                    }
-                    promises.push(db.delete(deleteParams).promise())
+                    };
+                    promises.push(db.delete(deleteParams).promise());
                 });
                 return Promise.all(promises);
             }
-        }).then(res => {
+        }).then(_ => {
             callback();
-        }).catch(err => {
-            console.log('Prune error')
+        }).catch(_ => {
+            console.log('Prune error');
             callback();
-        })
+        });
     };
 
-}
+};

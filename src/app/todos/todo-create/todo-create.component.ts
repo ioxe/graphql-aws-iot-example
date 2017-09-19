@@ -38,7 +38,7 @@ export class TodoCreateComponent {
     resetForm() {
         this.todoCreateForm.reset();
         Object.keys(this.todoCreateForm.controls).forEach(key => {
-            this.todoCreateForm.controls[key].setErrors(null)
+            this.todoCreateForm.controls[key].setErrors(null);
         });
     }
 
@@ -62,8 +62,13 @@ export class TodoCreateComponent {
                         if (!mutationResult.data) {
                             return prev;
                         }
+                        // handle case where subscription returned before mutation result
+                        const teamTodoExists = prev.teamTodos.find(obj => obj.id === mutationResult.data.createTodo.id);
+                        if (teamTodoExists) {
+                            return prev;
+                        }
                         const newTodo = Object.assign({},
-                            mutationResult.data.createTodo,
+                           mutationResult.data.createTodo,
                             variables.input);
                         return {
                             teamTodos: [...prev.teamTodos, newTodo]
