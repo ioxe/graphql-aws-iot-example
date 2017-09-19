@@ -77,7 +77,6 @@ export class TodoTeamComponent implements OnInit, OnDestroy {
                 }
                 const newTodo = data.teamTodoAdded;
                 const teamTodoExists = currentTeamTodos.teamTodos.find(obj => obj.id === newTodo.id);
-                console.log(teamTodoExists);
                 if (!teamTodoExists) {
                     const updatedTodos = {
                         teamTodos: [...currentTeamTodos.teamTodos, newTodo]
