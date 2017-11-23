@@ -26,7 +26,7 @@ aws describe iot-endpoint --profile profilename --region region
 
 * The lambda build files for the lambda functions are served on a public bucket so you should not need to change the key / bucket for deploying this stack. If you want to deploy your own custom functions. You need to change the BackendCodeBucket, TodoApiKey, SubscriptionPublisherKey, and SubscriptionPrunerKey input parameters.
 
-* To rebuild the three lambda function please see package.json for each function for the current build scripts. You would need to change the variables in the config (devFunctionName, devCodeBucketName, codeKey and profile to match your own environment). devFunctionName is used to update and existing lambda function so it is not needed for your first deploy. 
+* To rebuild the three lambda function please see package.json for each function for the current build scripts. You would need to change the variables in the config (devFunctionName, devCodeBucketName, codeKey, profile and region to match your own environment). devFunctionName is used to update and existing lambda function so it is not needed for your first deploy. 
 
 * npm run update:S3 uploads the build zip to an s3 bucket so that it can be used with cloudformation.
 
