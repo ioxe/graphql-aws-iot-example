@@ -31,15 +31,16 @@ Parameters:
   SubscriptionPrunerKey:
     Type: String
     Default: todo-subscription-pruner.zip
-
-
-  # Currently min and max for autoscaling are the same across all tables
+  OriginAccessIdentity:
+    Type: String
+    MinLength: 2
+    Description: 'You need to create an origin access identity via aws console. Required for cloudfront distribution'
   MaxDynamoDbAutoScalingCapacity:
     Type: Number
     Default: 20
   MinDynamoDbAutoScalingCapacity:
     Type: Number
-    Default: 20
+    Default: 10
 
 Resources:
   # Api that runs graphql serverless subscriptions transport - handles all messages from socket
@@ -380,7 +381,7 @@ Resources:
         - DomainName: !GetAtt WebsiteBucket.DomainName
           Id: graphqlAWSIOTTransportExample
           S3OriginConfig:
-            OriginAccessIdentity: origin-access-identity/cloudfront/E3HBPMOKIIYXWL
+            OriginAccessIdentity: !Ref OriginAccessIdentity
         Enabled: 'true'
         DefaultRootObject: index.html
         Aliases:
@@ -658,7 +659,7 @@ Outputs:
     Value: !Ref WebsiteBucket
   WebsiteBucketUrl:
     Description: Url to view client app once build is uploaded to website bucket
-    Value: !GetAtt WebsiteBucket.WebsiteURL
+    Value: !Join ['', ['https://', !GetAtt CloudfrontDistribution.DomainName]]
   IdentityPoolId:
     Description: Identity pool id. Needs to be set in  client app environment variables
     Value: !Ref TodoIdentityPool 
