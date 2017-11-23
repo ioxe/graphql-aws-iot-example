@@ -384,8 +384,8 @@ Resources:
             OriginAccessIdentity: !Ref OriginAccessIdentity
         Enabled: 'true'
         DefaultRootObject: index.html
-        Aliases:
-          - todo.girishnanda.com
+        # Aliases:
+        #   - todo.girishnanda.com // update with valid alias that matches custom domain
         DefaultCacheBehavior:
           AllowedMethods:
           - DELETE
@@ -402,9 +402,9 @@ Resources:
               Forward: none
           ViewerProtocolPolicy: redirect-to-https
         PriceClass: PriceClass_200
-        ViewerCertificate:
-          AcmCertificateArn: arn:aws:acm:us-east-1:167274848478:certificate/012a8297-884d-4200-ab76-d8e3ead3366c
-          SslSupportMethod: sni-only
+        # ViewerCertificate: // only required if you are using a custom domain
+        #   AcmCertificateArn: // update with valid acm certificate arn
+        #   SslSupportMethod: sni-only
         CustomErrorResponses:
           - ErrorCachingMinTTL: '0'
             ErrorCode: '404'
