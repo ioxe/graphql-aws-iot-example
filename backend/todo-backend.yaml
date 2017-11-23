@@ -19,10 +19,24 @@ Parameters:
     Type: String
     Default: teamNameToTodos
     Description: Index name for ClientId to Subscription Names index
+  BackendCodeBucket:
+    Type: String
+    Default: iox-playground
+  TodoApiKey:
+    Type: String
+    Default: todo-api.zip
+  SubscriptionPublisherKey:
+    Type: String
+    Default: todo-subscription-publisher.zip
+  SubscriptionPrunerKey:
+    Type: String
+    Default: todo-subscription-pruner.zip
+
+
   # Currently min and max for autoscaling are the same across all tables
   MaxDynamoDbAutoScalingCapacity:
     Type: Number
-    Default: 200
+    Default: 20
   MinDynamoDbAutoScalingCapacity:
     Type: Number
     Default: 20
@@ -35,8 +49,8 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn 
       Code: 
-        S3Bucket: iox-playground
-        S3Key: todo-api.zip
+        S3Bucket: !Ref BackendCodeBucket
+        S3Key: !Ref TodoApiKey
       Environment:
         Variables:
           AppPrefix: !Ref AppPrefix
@@ -64,8 +78,8 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Code: 
-        S3Bucket: iox-playground
-        S3Key: todo-subscription-publisher.zip
+        S3Bucket: !Ref BackendCodeBucket
+        S3Key: !Ref SubscriptionPublisherKey
       Environment:
         Variables:
           AppPrefix: !Ref AppPrefix
@@ -86,8 +100,8 @@ Resources:
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Code: 
-        S3Bucket: iox-playground
-        S3Key: todo-subscription-pruner.zip
+        S3Bucket: !Ref BackendCodeBucket
+        S3Key: !Ref SubscriptionPrunerKey
       Environment:
         Variables:
           SubscriptionsTableName: !Ref SubscriptionsTable
@@ -638,3 +652,17 @@ Resources:
                   - "cloudwatch:SetAlarmState"
                   - "cloudwatch:DeleteAlarms"
                 Resource: "*"
+Outputs:
+  WebsiteBucketName:
+    Description: Bucket to upload client build.  Needs to be set in  client app package.json to upload new build
+    Value: !Ref WebsiteBucket
+  WebsiteBucketUrl:
+    Description: Url to view client app once build is uploaded to website bucket
+    Value: !GetAtt WebsiteBucket.WebsiteURL
+  IdentityPoolId:
+    Description: Identity pool id. Needs to be set in  client app environment variables
+    Value: !Ref TodoIdentityPool 
+  IotEndpoint:
+    Description: Iot endpoint. Needs to be updated in client app environment variables
+    Value: !Ref IotEndpoint
+    
