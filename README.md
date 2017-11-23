@@ -16,6 +16,9 @@ https://github.com/ioxe/graphql-aws-iot-example/blob/master/backend/todo-backend
 
 * For IotEndpoint you need to enter the IoT endpoint for the region and account number where you are deploying this app.
 Below is the command to get the endpoint for a specific aws profile and region
+
+* You need to specify an origin access identity as an input parameter to the stack. You can either choose an existing one or create a new one from the cloudfront section of the AWS console under Private Content / Origin Access Identity. An origin access identity should look like E2ZUH5OG8A4XID. If the identity is invalid the cloudfront distribution will fail to deploy and the stack create will fail.
+
 ```
 aws describe iot-endpoint --profile profilename --region region
 ```
@@ -23,7 +26,7 @@ aws describe iot-endpoint --profile profilename --region region
 
 * The lambda build files for the lambda functions are served on a public bucket so you should not need to change the key / bucket for deploying this stack. If you want to deploy your own custom functions. You need to change the BackendCodeBucket, TodoApiKey, SubscriptionPublisherKey, and SubscriptionPrunerKey input parameters.
 
-* To rebuild the three lambda function please see package.json for each function for the current build scripts. You would need to change the variables in the config (devFunctionName, devCodeBucketName, codeKey and profile to match your own environment). devFunctionName is used to update and existing lambda function so it is not needed for your first deploy. 
+* To rebuild the three lambda function please see package.json for each function for the current build scripts. You would need to change the variables in the config (devFunctionName, devCodeBucketName, codeKey, profile and region to match your own environment). devFunctionName is used to update and existing lambda function so it is not needed for your first deploy. 
 
 * npm run update:S3 uploads the build zip to an s3 bucket so that it can be used with cloudformation.
 
