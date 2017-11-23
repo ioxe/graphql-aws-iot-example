@@ -7,7 +7,8 @@
     "devFunctionName": "todo-ws-transport-example-SubscriptionPublisher-156FH0BIGO2ZB",
     "devCodeBucketName": "iox-playground",
     "codeKey": "todo-subscription-publisher.zip",
-    "profile": "iox"
+    "profile": "iox",
+    "region": "us-west-2"
   },
   "scripts": {
     "prebuild": "rm -rf dist && mkdir -p dist",
@@ -17,8 +18,8 @@
     "lint": "eslint src",
     "lint:dist": "eslint dist index.js",
     "preupdate": "npm run build && npm run zip",
-    "update": "aws lambda update-function-code --function-name $npm_package_config_devFunctionName --zip-file fileb://$PWD/build/build.zip --profile $npm_package_config_profile --region us-west-2",
-    "updateS3": "npm run preupdate && aws s3 cp build/build.zip s3://$npm_package_config_devCodeBucketName/$npm_package_config_codeKey --profile $npm_package_config_profile --region us-west-2",
+    "update": "aws lambda update-function-code --function-name $npm_package_config_devFunctionName --zip-file fileb://$PWD/build/build.zip --profile $npm_package_config_profile --region $npm_package_config_region",
+    "updateS3": "npm run preupdate && aws s3 cp build/build.zip s3://$npm_package_config_devCodeBucketName/$npm_package_config_codeKey --profile $npm_package_config_profile --region $npm_package_config_region",
     "schema:generate": "babel src --out-dir dist -s && node output-schema.js"
   },
   "author": "",
