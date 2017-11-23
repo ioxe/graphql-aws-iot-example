@@ -21,7 +21,7 @@ aws describe iot-endpoint --profile profilename --region region
 ```
 * You may want to also change the MinDynamoDbAutoScalingCapacity and the MaxDynamoDbAutoScalingCapacity according to your needs. Changing the max capacity to more than 25 a month would exceed the free tier for your account.
 
-* The lambda build files for the lambda functions are served on a public bucket so you should not need to change the key / bucket for deploying this stack. If you want to deploy your own customer functions. You need to change the BackendCodeBucket, TodoApiKey, SubscriptionPublisherKey, and SubscriptionPrunerKey input parameters.
+* The lambda build files for the lambda functions are served on a public bucket so you should not need to change the key / bucket for deploying this stack. If you want to deploy your own custom functions. You need to change the BackendCodeBucket, TodoApiKey, SubscriptionPublisherKey, and SubscriptionPrunerKey input parameters.
 
 * To rebuild the three lambda function please see package.json for each function for the current build scripts. You would need to change the variables in the config (devFunctionName, devCodeBucketName, codeKey and profile to match your own environment). devFunctionName is used to update and existing lambda function so it is not needed for your first deploy. 
 
