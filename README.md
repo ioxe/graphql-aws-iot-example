@@ -16,6 +16,9 @@ https://github.com/ioxe/graphql-aws-iot-example/blob/master/backend/todo-backend
 
 * For IotEndpoint you need to enter the IoT endpoint for the region and account number where you are deploying this app.
 Below is the command to get the endpoint for a specific aws profile and region
+
+* You need to specify an origin access identity as an input parameter to the stack. You can either choose an existing one or create a new one from the cloudfront section of the AWS console under Private Content / Origin Access Identity. An origin access identity should look like E2ZUH5OG8A4XID. If the identity is invalid the cloudfront distribution will fail to deploy and the stack create will fail.
+
 ```
 aws describe iot-endpoint --profile profilename --region region
 ```
