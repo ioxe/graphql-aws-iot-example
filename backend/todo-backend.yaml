@@ -37,10 +37,10 @@ Parameters:
     Description: 'You need to create an origin access identity via aws console. Required for cloudfront distribution'
   MaxDynamoDbAutoScalingCapacity:
     Type: Number
-    Default: 20
+    Default: 10
   MinDynamoDbAutoScalingCapacity:
     Type: Number
-    Default: 10
+    Default: 5
 
 Resources:
   # Api that runs graphql serverless subscriptions transport - handles all messages from socket
