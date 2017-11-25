@@ -22,7 +22,7 @@ Below is the command to get the endpoint for a specific aws profile and region
 ```
 aws describe iot-endpoint --profile profilename --region region
 ```
-* You may want to also change the MinDynamoDbAutoScalingCapacity and the MaxDynamoDbAutoScalingCapacity according to your needs. Changing the max capacity to more than 25 a month would exceed the free tier for your account.
+* You may want to also change the MinDynamoDbAutoScalingCapacity and the MaxDynamoDbAutoScalingCapacity. Currently there are two global indexes for the subscription publisher and pruner as well the 2 primary indexes (1 for subscriptions table 1 for todos table). So setting a min capacity of 5 would mean 20 write and 20 read capacity units would be provisioned. you get 25 read units and 25 write units in the free tier. I am sure this could be optimized perhaps using local secondary indexes instead of global indexes so that it would take less total read /write units.
 
 * The lambda build files for the lambda functions are served on a public bucket so you should not need to change the key / bucket for deploying this stack. If you want to deploy your own custom functions. You need to change the BackendCodeBucket, TodoApiKey, SubscriptionPublisherKey, and SubscriptionPrunerKey input parameters.
 
